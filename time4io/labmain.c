@@ -94,6 +94,61 @@ int get_sw(void) {
   return *button_pointer & 0x1;
  }
 
+ void time2display(int mytime){
+
+  //Seconds
+  set_displays(0, mytime & 0xf);
+  set_displays(1, (mytime & 0xf0) >> 4);
+
+  //Minutes
+  set_displays(2, (mytime & 0xf00) >> 8);
+  set_displays(3, (mytime & 0xf000) >> 12);
+
+  //Hours
+  set_displays(4, (mytime & 0xf0000) >> 16);
+  set_displays(5, (mytime & 0xf00000) >> 20);
+
+ }
+
+ void check_button() {
+  if(!get_btn()) {
+    return;
+  }
+
+  int sw = get_sw();
+  //Masks out the 8 least significant switches to give us the setting for either
+  //seconds minutes or hours.
+  int display = sw & 0x300;
+
+  //Masks out the 4 most significant switches
+  //so we get the value of the switches that are turned on
+  int switch_value = sw & 0x3f;
+
+  //We change the value to clock bcd format
+  int switch_value_bcd_format = ((switch_value / 10) << 4) | (switch_value % 10);
+  int mask = 0;
+
+  switch(display) {
+    //Update seconds
+    case 0x100:
+      mask = mytime & 0xffffff00;
+      mytime = mask | switch_value_bcd_format;
+      break;
+    //Update minutes
+    case 0x200:
+      mask = mytime & 0xffff00ff;
+      mytime = mask | (switch_value_bcd_format << 8);
+      break;
+    //Update hours
+    case 0x300:
+      mask = mytime & 0xff00ffff;
+      mytime = mask | (switch_value_bcd_format << 16);
+      break;
+
+  }
+
+ }
+
 
 /* Your code goes into main as well as any needed functions. */
 int main() {
@@ -103,22 +158,33 @@ int main() {
   int ledmask = 0;
   set_leds(ledmask);
 
-  set_displays(0, 1);
 
   // Enter a forever loop
   while (ledmask < 0xf) {
     time2string( textstring, mytime ); // Converts mytime to string
-    //display_string( textstring ); //Print out the string 'textstring'
+    time2display(mytime);
+    display_string( textstring ); //Print out the string 'textstring'
     delay( 1000 );          // Delays 1 sec (adjust this value)
     tick( &mytime );     // Ticks the clock once
     ledmask++;
     set_leds(ledmask);
-    set_displays(0, ledmask);
 
     print_dec(get_btn());
     display_string("");
     
   }
+
+  //End-loop switch is 7 (to the right of the two most significant switches)
+  //Switch needs to be flipped up for the program to run.
+  while((get_sw() & 0x80) != 0) {
+    check_button();
+    time2string( textstring, mytime ); // Converts mytime to string
+    time2display(mytime);
+    display_string( textstring ); //Print out the string 'textstring'
+    delay( 1000 );          // Delays 1 sec (adjust this value)
+    tick( &mytime );     // Ticks the clock once
+
+  } 
 }
 
 
