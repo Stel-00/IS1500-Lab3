@@ -34,18 +34,23 @@ void set_leds(int led_mask) {
   *led_pointer = led_mask;
 }
 
+
 /* Your code goes into main as well as any needed functions. */
 int main() {
   // Call labinit()
   labinit();
-  set_leds(0xa);
+
+  int ledmask = 0;
+  set_leds(ledmask);
 
   // Enter a forever loop
-  while (1) {
+  while (ledmask < 0xf) {
     time2string( textstring, mytime ); // Converts mytime to string
     display_string( textstring ); //Print out the string 'textstring'
     delay( 1000 );          // Delays 1 sec (adjust this value)
     tick( &mytime );     // Ticks the clock once
+    ledmask++;
+    set_leds(ledmask);
   }
 }
 
