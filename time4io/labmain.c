@@ -86,6 +86,12 @@ int get_sw(void) {
   volatile int* switch_pointer = (volatile int*) 0x04000010;
 
   return *switch_pointer & 0x3ff;
+}
+
+ int get_btn(void) {
+  volatile int* button_pointer = (volatile int*) 0x040000d0;
+
+  return *button_pointer & 0x1;
  }
 
 
@@ -109,7 +115,7 @@ int main() {
     set_leds(ledmask);
     set_displays(0, ledmask);
 
-    print_dec(get_sw());
+    print_dec(get_btn());
     display_string("");
     
   }
