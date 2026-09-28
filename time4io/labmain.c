@@ -25,10 +25,20 @@ void handle_interrupt(unsigned cause)
 void labinit(void)
 {}
 
+
+void set_leds(int led_mask) {
+  //Create pointer to the memory segment of the led
+  volatile int *led_pointer = (volatile int*) 0x04000000;
+
+  //Dereference and set that value to the led mask
+  *led_pointer = led_mask;
+}
+
 /* Your code goes into main as well as any needed functions. */
 int main() {
   // Call labinit()
   labinit();
+  set_leds(0xa);
 
   // Enter a forever loop
   while (1) {
