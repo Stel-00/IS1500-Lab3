@@ -82,6 +82,12 @@ void set_displays(int display_number, int value) {
 
 }
 
+int get_sw(void) {
+  volatile int* switch_pointer = (volatile int*) 0x04000010;
+
+  return *switch_pointer & 0x3ff;
+ }
+
 
 /* Your code goes into main as well as any needed functions. */
 int main() {
@@ -96,15 +102,16 @@ int main() {
   // Enter a forever loop
   while (ledmask < 0xf) {
     time2string( textstring, mytime ); // Converts mytime to string
-    display_string( textstring ); //Print out the string 'textstring'
+    //display_string( textstring ); //Print out the string 'textstring'
     delay( 1000 );          // Delays 1 sec (adjust this value)
     tick( &mytime );     // Ticks the clock once
     ledmask++;
     set_leds(ledmask);
     set_displays(0, ledmask);
-    set_displays(2, ledmask);
-    set_displays(4, ledmask);
-    set_displays(5, ledmask);
+
+    print_dec(get_sw());
+    display_string("");
+    
   }
 }
 
