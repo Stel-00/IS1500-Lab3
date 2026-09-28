@@ -16,7 +16,9 @@ extern int nextprime( int );
 
 int mytime = 0x5957;
 char textstring[] = "text, more text, and even more text!";
+
 volatile int* timer_pointer = (volatile int*) 0x04000020;
+int timeout_counter = 0;
 
 /* Below is the function that will be called when an interrupt is triggered. */
 void handle_interrupt(unsigned cause) 
@@ -167,9 +169,17 @@ int get_sw(void) {
     return 0;
   }
 
+  if(timeout_counter > 9) {
+    timeout_counter = 0;
+    *timer_pointer = *timer_pointer & 0xfffffff0;
+    return 1;
+  }
+  
   //Reset TO bit
+  timeout_counter++;
   *timer_pointer = *timer_pointer & 0xfffffff0;
-  return 1;
+  return 0;
+
 
  }
 
@@ -185,9 +195,6 @@ int main() {
       time2string( textstring, mytime ); // Converts mytime to string
       time2display(mytime);
       display_string( textstring ); //Print out the string 'textstring'
-
-
-      //delay( 1000 );          // Delays 1 sec (adjust this value)
       tick( &mytime );     // Ticks the clock once
     }
     check_button();
