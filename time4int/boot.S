@@ -131,9 +131,8 @@ enable_interrupt:
 	li t0, 0x8
 	csrs mstatus, t0
 
-	//Enable the timer interrupt in the register mie (machine interrupt enable), on bit 11 or 7
-	//We try bit 11 (external interrupts)
-	li t0, 0x800
+	//Enable the timer interrupt in the register mie (machine interrupt enable), on bit 16
+	li t0, 0x10000
 	csrs mie, t0
 
 	ret

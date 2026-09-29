@@ -13,6 +13,7 @@ extern void time2string(char*,int);
 extern void tick(int*);
 extern void delay(int);
 extern int nextprime( int );
+extern void enable_interrupt();
 
 int prime = 1234567;
 
@@ -106,16 +107,19 @@ void handle_interrupt(unsigned cause) {
     timeout_counter = 0;
   }
 
+  timeout_counter++;
+
   *timer_pointer = *timer_pointer & 0xfffffff0;
   
   
 }
 
 /* Add your code here for initializing interrupts. */
-void labinit(void) {
+void labinit(void) {  
   //100 ms interval and 30MHz gives us 3000000 cycles
   //3000000 in hex: 0x2DC6C0
 
+  enable_interrupt();
   //periodl register
   *(timer_pointer + 2) = 0xC6C0;
 
@@ -124,6 +128,7 @@ void labinit(void) {
 
   //control register, set to start and cont and ito
   *(timer_pointer + 1) = 0x7;
+
 }
 
 
