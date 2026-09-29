@@ -19,40 +19,10 @@ int prime = 1234567;
 int mytime = 0x5957;
 char textstring[] = "text, more text, and even more text!";
 
+
 volatile int* timer_pointer = (volatile int*) 0x04000020;
 int timeout_counter = 0;
 
-/* Below is the function that will be called when an interrupt is triggered. */
-void handle_interrupt(unsigned cause) {
-
-  time2display(mytime);
-
-  tick(&mytime);
-}
-
-/* Add your code here for initializing interrupts. */
-void labinit(void) {
-  //100 ms interval and 30MHz gives us 3000000 cycles
-  //3000000 in hex: 0x2DC6C0
-
-  //periodl register
-  *(timer_pointer + 2) = 0xC6C0;
-
-  //periodh register
-  *(timer_pointer + 3) = 0x2D;
-
-  //control register, set to start and cont
-  *(timer_pointer + 1) = 0x6;
-}
-
-
-void set_leds(int led_mask) {
-  //Create pointer to the memory segment of the led
-  volatile int *led_pointer = (volatile int*) 0x04000000;
-
-  //Dereference and set that value to the led mask
-  *led_pointer = led_mask;
-}
 
 void set_displays(int display_number, int value) {
 
@@ -114,21 +84,57 @@ int get_sw(void) {
   return *button_pointer & 0x1;
  }
 
- void time2display(int mytime){
 
-  //Seconds
-  set_displays(0, mytime & 0xf);
-  set_displays(1, (mytime & 0xf0) >> 4);
+/* Below is the function that will be called when an interrupt is triggered. */
+void handle_interrupt(unsigned cause) {
 
-  //Minutes
-  set_displays(2, (mytime & 0xf00) >> 8);
-  set_displays(3, (mytime & 0xf000) >> 12);
+  if(timeout_counter > 9) {
+    //Seconds
+    set_displays(0, mytime & 0xf);
+    set_displays(1, (mytime & 0xf0) >> 4);
 
-  //Hours
-  set_displays(4, (mytime & 0xf0000) >> 16);
-  set_displays(5, (mytime & 0xf00000) >> 20);
+    //Minutes
+    set_displays(2, (mytime & 0xf00) >> 8);
+    set_displays(3, (mytime & 0xf000) >> 12);
 
- }
+    //Hours
+    set_displays(4, (mytime & 0xf0000) >> 16);
+    set_displays(5, (mytime & 0xf00000) >> 20);
+
+    tick(&mytime);
+
+    timeout_counter = 0;
+  }
+
+  *timer_pointer = *timer_pointer & 0xfffffff0;
+  
+  
+}
+
+/* Add your code here for initializing interrupts. */
+void labinit(void) {
+  //100 ms interval and 30MHz gives us 3000000 cycles
+  //3000000 in hex: 0x2DC6C0
+
+  //periodl register
+  *(timer_pointer + 2) = 0xC6C0;
+
+  //periodh register
+  *(timer_pointer + 3) = 0x2D;
+
+  //control register, set to start and cont and ito
+  *(timer_pointer + 1) = 0x7;
+}
+
+
+void set_leds(int led_mask) {
+  //Create pointer to the memory segment of the led
+  volatile int *led_pointer = (volatile int*) 0x04000000;
+
+  //Dereference and set that value to the led mask
+  *led_pointer = led_mask;
+}
+
 
  void check_button() {
   if(!get_btn()) {
@@ -169,25 +175,6 @@ int get_sw(void) {
 
  }
 
- int check_timeout() {
-  //If no timeout, return
-  if((*timer_pointer & 0x1) == 0) {
-    return 0;
-  }
-
-  if(timeout_counter > 9) {
-    timeout_counter = 0;
-    *timer_pointer = *timer_pointer & 0xfffffff0;
-    return 1;
-  }
-  
-  //Reset TO bit
-  timeout_counter++;
-  *timer_pointer = *timer_pointer & 0xfffffff0;
-  return 0;
-
-
- }
 
 /* Your code goes into main as well as any needed functions. */
 int main() {
